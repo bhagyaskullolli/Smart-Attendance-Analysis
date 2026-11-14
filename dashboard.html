@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, pct_bar %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="hero">
+  <h1>Smart Attendance Analyser</h1>
+  <div class="tag">Smarter Attendance. Better Insights.</div>
+  <a class="btn btn-hero me-2 mb-2" href="{{ url_for('attendance') }}"><i class="bi bi-calendar-check"></i> Mark Attendance</a>
+  <a class="btn btn-hero-outline me-2 mb-2" href="{{ url_for('student_add') }}"><i class="bi bi-person-plus"></i> Add Student</a>
+  <a class="btn btn-hero-outline mb-2" href="{{ url_for('reports') }}"><i class="bi bi-file-earmark-text"></i> Reports</a>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3"><a class="text-reset text-decoration-none" href="{{ url_for('students') }}">
+    <div class="stat-card s-blue"><div class="stat-icon"><i class="bi bi-people-fill"></i></div>
+      <div><div class="num">{{ d.total_students }}</div><div class="lbl">Total Students</div>
+      <div class="sub">{{ d.total_subjects }} subject{{ '' if d.total_subjects == 1 else 's' }}</div></div></div></a></div>
+  <div class="col-6 col-xl-3"><a class="text-reset text-decoration-none" href="{{ url_for('reports', type='daily', date_from=today, date_to=today) }}">
+    <div class="stat-card s-green"><div class="stat-icon"><i class="bi bi-check-circle-fill"></i></div>
+      <div><div class="num">{{ d.present_today }}</div><div class="lbl">Present Today</div>
+      <div class="sub">{{ d.marked_today }} record{{ '' if d.marked_today == 1 else 's' }} marked today</div></div></div></a></div>
+  <div class="col-6 col-xl-3"><a class="text-reset text-decoration-none" href="{{ url_for('reports', type='daily', date_from=today, date_to=today) }}">
+    <div class="stat-card s-red"><div class="stat-icon"><i class="bi bi-x-circle-fill"></i></div>
+      <div><div class="num">{{ d.absent_today }}</div><div class="lbl">Absent Today</div>
+      <div class="sub">across all subjects</div></div></div></a></div>
+  <div class="col-6 col-xl-3"><a class="text-reset text-decoration-none" href="{{ url_for('analysis_page') }}#at-risk">
+    <div class="stat-card s-yellow"><div class="stat-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+      <div><div class="num">{{ d.at_risk_count }}</div><div class="lbl">At Risk Students</div>
+      <div class="sub">below {{ risk }}% attendance</div></div></div></a></div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-5">
+    <div class="card-x">
+      <h5 class="card-title"><i class="bi bi-pie-chart-fill"></i> Overall Attendance Overview</h5>
+      {% if d.overall.total %}
+        <div class="chart-box"><canvas id="overviewChart"></canvas></div>
+        <div class="text-center mt-2 fw-semibold">Overall: <span class="text-primary">{{ '%.1f'|format(d.overall.percent) }}%</span>
+          <span class="text-muted fw-normal">({{ d.overall.present }} of {{ d.overall.total }} records)</span></div>
+      {% else %}
+        <div class="empty"><i class="bi bi-pie-chart"></i>No attendance marked yet.<br>
+          <a href="{{ url_for('attendance') }}">Mark attendance</a> to see this chart.</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card-x">
+      <h5 class="card-title"><i class="bi bi-graph-up"></i> Monthly Attendance Trend</h5>
+      {% if d.monthly %}
+        <div class="chart-box"><canvas id="trendChart"></canvas></div>
+      {% else %}
+        <div class="empty"><i class="bi bi-graph-up"></i>The trend appears after attendance is marked.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-xl-8">
+    <div class="card-x">
+      <h5 class="card-title"><i class="bi bi-clock-history"></i> Recent Attendance Records</h5>
+      {% if d.recent %}
+      <div class="table-responsive">
+        <table class="table-x">
+          <thead><tr><th>Date</th><th>Student</th><th>Subject</th><th>Status</th><th>Student %</th></tr></thead>
+          <tbody>
+          {% for r in d.recent %}
+            <tr>
+              <td>{{ r.date }}</td>
+              <td><a href="{{ url_for('student_view', sid=r.student_id) }}"><b>{{ r.name }}</b></a><br><small class="text-muted">{{ r.reg_no }}</small></td>
+              <td>{{ r.subject }}</td>
+              <td>{{ status_badge(r.status) }}</td>
+              <td>{{ '%.1f%%'|format(r.percent) if r.percent is not none else '-' }}</td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+        <div class="empty"><i class="bi bi-inbox"></i>No records yet.</div>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-xl-4">
+    <div class="card-x">
+      <h5 class="card-title"><i class="bi bi-calendar-week"></i> Date-wise Attendance</h5>
+      {% if d.daily %}
+      <ul class="mini-list">
+        {% for r in d.daily %}
+        <li><div><b>{{ r.key }}</b><small>{{ r.present }} present · {{ r.absent }} absent</small></div>
+          <span class="badge-s {{ 'b-excellent' if r.percent >= 90 else 'b-good' if r.percent >= risk + 10 else 'b-low' if r.percent >= risk else 'b-at-risk' }}">{{ '%.0f'|format(r.percent) }}%</span></li>
+        {% endfor %}
+      </ul>
+      {% else %}
+        <div class="empty"><i class="bi bi-calendar-x"></i>No dates marked yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="card-x">
+  <div class="d-flex justify-content-between align-items-center mb-2">
+    <h5 class="card-title mb-0"><i class="bi bi-person-lines-fill"></i> Student Attendance Percentage <small class="text-muted fw-normal">(lowest first)</small></h5>
+    <a class="btn btn-sm btn-outline-primary" href="{{ url_for('students') }}">View all</a>
+  </div>
+  {% if d.lowest_students %}
+  <div class="table-responsive">
+    <table class="table-x">
+      <thead><tr><th>Reg. No</th><th>Student</th><th>Present / Total</th><th>Attendance</th><th>Status</th></tr></thead>
+      <tbody>
+      {% for s in d.lowest_students %}
+        <tr>
+          <td>{{ s.reg_no }}</td>
+          <td><a href="{{ url_for('student_view', sid=s.id) }}"><b>{{ s.name }}</b></a></td>
+          <td>{{ s.present }} / {{ s.total }}</td>
+          <td>{{ pct_bar(s.percent, s.status) }}</td>
+          <td>{{ status_badge(s.status) }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty"><i class="bi bi-people"></i>
+      {% if d.total_students == 0 %}No students yet. <a href="{{ url_for('student_add') }}">Add your first student</a>.
+      {% else %}Percentages appear once attendance is marked.{% endif %}</div>
+  {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  {% if d.overall.total %}SAA.doughnut("overviewChart", {{ d.overall.present }}, {{ d.overall.absent }});{% endif %}
+  {% if d.monthly %}SAA.line("trendChart", {{ d.monthly|map(attribute='label')|list|tojson }}, {{ d.monthly|map(attribute='percent')|list|tojson }}, "Attendance %");{% endif %}
+</script>
+{% endblock %}

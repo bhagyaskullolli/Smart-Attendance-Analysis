@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, pct_bar, csrf %}
+{% block title %}Students{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="grow"><h2><i class="bi bi-people-fill"></i> Students</h2><p>Add, search, edit and review student attendance.</p></div>
+  <a class="btn btn-hero" href="{{ url_for('student_add') }}"><i class="bi bi-person-plus-fill"></i> Add New Student</a>
+</div>
+
+<div class="card-x">
+  <form class="row g-2 mb-3" method="get" action="{{ url_for('students') }}">
+    <div class="col-md-6 col-lg-5"><div class="search-box"><i class="bi bi-search"></i>
+      <input class="form-control" name="q" value="{{ q }}" placeholder="Search by name, register no, email, phone or class"></div></div>
+    <div class="col-auto"><button class="btn btn-primary" type="submit"><i class="bi bi-search"></i> Search</button></div>
+    {% if q %}<div class="col-auto"><a class="btn btn-outline-secondary" href="{{ url_for('students') }}">Clear</a></div>{% endif %}
+    <div class="col text-md-end align-self-center text-muted">{{ students|length }} student{{ '' if students|length == 1 else 's' }}</div>
+  </form>
+
+  {% if students %}
+  <div class="table-responsive">
+    <table class="table-x">
+      <thead><tr><th>Reg. No</th><th>Name</th><th>Class</th><th>Email</th><th>Phone</th><th>Attendance</th><th>Status</th><th class="text-end">Actions</th></tr></thead>
+      <tbody>
+      {% for s in students %}
+        <tr>
+          <td><b>{{ s.reg_no }}</b></td>
+          <td>{{ s.name }}</td>
+          <td>{{ s.class_name }}</td>
+          <td>{{ s.email or '-' }}</td>
+          <td>{{ s.phone or '-' }}</td>
+          <td>{{ pct_bar(s.percent, s.status) }}</td>
+          <td>{{ status_badge(s.status) }}</td>
+          <td class="text-end text-nowrap">
+            <a class="btn btn-icon btn-outline-primary" href="{{ url_for('student_view', sid=s.id) }}" title="View details"><i class="bi bi-eye"></i></a>
+            <a class="btn btn-icon btn-outline-secondary" href="{{ url_for('student_edit', sid=s.id) }}" title="Edit"><i class="bi bi-pencil"></i></a>
+            <form class="d-inline" method="post" action="{{ url_for('student_delete', sid=s.id) }}"
+                  data-confirm="Delete {{ s.name }}? All of this student's attendance records will also be deleted.">
+              {{ csrf() }}<button class="btn btn-icon btn-outline-danger" title="Delete"><i class="bi bi-trash"></i></button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty"><i class="bi bi-people"></i>
+      {% if q %}No student matches "{{ q }}".{% else %}No students yet.{% endif %}
+      <br><a href="{{ url_for('student_add') }}">Add a student</a></div>
+  {% endif %}
+</div>
+{% endblock %}

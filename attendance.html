@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Mark Attendance{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="grow"><h2><i class="bi bi-calendar-check-fill"></i> Mark Attendance</h2>
+    <p>Choose a date and subject, mark each student, then save.</p></div>
+</div>
+
+{% if not subjects or not students %}
+<div class="card-x"><div class="empty"><i class="bi bi-exclamation-circle"></i>
+  {% if not students %}You need at least one student. <a href="{{ url_for('student_add') }}">Add a student</a>.<br>{% endif %}
+  {% if not subjects %}You need at least one subject. <a href="{{ url_for('subject_add') }}">Add a subject</a>.{% endif %}
+</div></div>
+{% else %}
+
+<div class="card-x mb-3">
+  <form class="row g-3 align-items-end" method="get" action="{{ url_for('attendance') }}" data-autosubmit>
+    <div class="col-md-4"><label class="form-label">Date</label>
+      <input class="form-control" type="date" name="date" value="{{ date_val }}" max="{{ today }}" required></div>
+    <div class="col-md-6"><label class="form-label">Subject</label>
+      <select class="form-select" name="subject_id">
+        {% for s in subjects %}<option value="{{ s.id }}" {{ 'selected' if s.id == subject_id }}>{{ s.code }} - {{ s.name }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-2"><button class="btn btn-outline-primary w-100" type="submit"><i class="bi bi-arrow-repeat"></i> Load</button></div>
+  </form>
+</div>
+
+<div class="card-x">
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-center mb-3">
+    <div class="counter-box">
+      <div class="counter g"><i class="bi bi-check-circle"></i> Present: <span id="cntPresent">0</span></div>
+      <div class="counter r"><i class="bi bi-x-circle"></i> Absent: <span id="cntAbsent">0</span></div>
+      <div class="counter">Total: <span id="cntTotal">{{ students|length }}</span></div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+      <div class="search-box"><i class="bi bi-search"></i><input class="form-control" id="studentFilter" placeholder="Filter students"></div>
+      <button type="button" class="btn btn-outline-success" id="markAllPresent"><i class="bi bi-check2-all"></i> All Present</button>
+      <button type="button" class="btn btn-outline-danger" id="markAllAbsent"><i class="bi bi-x-lg"></i> All Absent</button>
+    </div>
+  </div>
+
+  {% if existing %}
+    <div class="alert alert-info py-2"><i class="bi bi-info-circle"></i> Attendance for this date and subject is already saved ({{ existing|length }} record{{ '' if existing|length == 1 else 's' }}). Change anything and press <b>Update Attendance</b>.</div>
+  {% else %}
+    <div class="alert alert-secondary py-2"><i class="bi bi-pencil-square"></i> Nothing saved yet for this date and subject. Everyone starts as Present - change the absentees.</div>
+  {% endif %}
+
+  <form method="post" id="markForm" action="{{ url_for('attendance') }}">
+    {{ csrf() }}
+    <input type="hidden" name="date" value="{{ date_val }}">
+    <input type="hidden" name="subject_id" value="{{ subject_id }}">
+    <div class="table-responsive">
+      <table class="table-x">
+        <thead><tr><th>#</th><th>Reg. No</th><th>Student</th><th>Class</th><th>Attendance</th></tr></thead>
+        <tbody>
+        {% for s in students %}
+          {% set current = existing.get(s.id, 'Present') %}
+          <tr data-student="{{ s.id }}">
+            <td>{{ loop.index }}</td><td>{{ s.reg_no }}</td><td><b>{{ s.name }}</b></td><td>{{ s.class_name }}</td>
+            <td>
+              <div class="mark-pill">
+                <input type="radio" class="btn-check" name="status_{{ s.id }}" id="p{{ s.id }}" value="Present" {{ 'checked' if current == 'Present' }}>
+                <label class="btn btn-outline-success" for="p{{ s.id }}"><i class="bi bi-check-lg"></i> Present</label>
+                <input type="radio" class="btn-check" name="status_{{ s.id }}" id="a{{ s.id }}" value="Absent" {{ 'checked' if current == 'Absent' }}>
+                <label class="btn btn-outline-danger" for="a{{ s.id }}"><i class="bi bi-x-lg"></i> Absent</label>
+              </div>
+            </td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="sticky-save mt-3 d-flex flex-wrap gap-2 justify-content-between align-items-center">
+      <span class="text-muted"><i class="bi bi-calendar3"></i> {{ date_val }}</span>
+      <div class="d-flex gap-2">
+        {% if existing %}<button class="btn btn-outline-danger" type="submit" form="deleteForm"><i class="bi bi-trash"></i> Delete Records</button>{% endif %}
+        <button class="btn btn-primary px-4" type="submit"><i class="bi bi-save2"></i> {{ 'Update Attendance' if existing else 'Save Attendance' }}</button>
+      </div>
+    </div>
+  </form>
+
+  {% if existing %}
+  <form id="deleteForm" method="post" action="{{ url_for('attendance_delete') }}"
+        data-confirm="Delete all saved attendance for this subject on {{ date_val }}?">
+    {{ csrf() }}<input type="hidden" name="date" value="{{ date_val }}"><input type="hidden" name="subject_id" value="{{ subject_id }}">
+  </form>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,15 @@
+# Optional "Blueprint" file - Render can read this to set everything up for you.
+services:
+  - type: web
+    name: smart-attendance-analyser
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 1 --threads 4 --timeout 60
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: SECRET_KEY
+        generateValue: true
+      - key: SEED_DEMO          # free plan loses data on restart -> auto-fill demo data
+        value: "1"

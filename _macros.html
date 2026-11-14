@@ -1,0 +1,13 @@
+{# Small reusable pieces used by several pages #}
+{% macro status_badge(status) -%}
+<span class="badge-s b-{{ status|lower|replace(' ', '-') }}">{{ status }}</span>
+{%- endmacro %}
+
+{% macro pct_bar(p, status) -%}
+{% if p is none %}<span class="text-muted">&mdash;</span>
+{% else %}<div class="pbar"><div class="track"><div class="fill f-{{ status|lower|replace(' ', '-') }}" style="width: {{ p }}%"></div></div><span>{{ '%.1f'|format(p) }}%</span></div>{% endif %}
+{%- endmacro %}
+
+{% macro csrf() -%}
+<input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+{%- endmacro %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge, pct_bar %}
+{% block title %}{{ s.name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="grow"><h2><i class="bi bi-journal-text"></i> {{ s.name }}</h2><p>{{ s.code }} · {{ s.semester }}</p></div>
+  <a class="btn btn-hero-outline" href="{{ url_for('subjects') }}"><i class="bi bi-arrow-left"></i> Back</a>
+  <a class="btn btn-hero" href="{{ url_for('subject_edit', sid=s.id) }}"><i class="bi bi-pencil"></i> Edit</a>
+</div>
+<div class="row g-3 mb-3">
+  <div class="col-lg-8"><div class="card-x">
+    <h5 class="card-title"><i class="bi bi-info-circle"></i> Subject Details</h5>
+    <div class="info-grid">
+      <div class="it"><small>Code</small><b>{{ s.code }}</b></div>
+      <div class="it"><small>Name</small><b>{{ s.name }}</b></div>
+      <div class="it"><small>Semester</small><b>{{ s.semester }}</b></div>
+      <div class="it"><small>Teacher</small><b>{{ s.teacher }}</b></div>
+      <div class="it"><small>Records</small><b>{{ s.present }} present · {{ s.absent }} absent · {{ s.total }} total</b></div>
+    </div></div></div>
+  <div class="col-lg-4"><div class="card-x text-center">
+    <h5 class="card-title justify-content-center"><i class="bi bi-percent"></i> Subject Attendance</h5>
+    {% if s.percent is not none %}
+      <div class="ring" style="--p: {{ s.percent }}"><b>{{ '%.1f'|format(s.percent) }}%</b></div>
+      <div class="mt-3">{{ status_badge(s.status) }}</div>
+    {% else %}<div class="empty"><i class="bi bi-hourglass"></i>No attendance yet.</div>{% endif %}
+  </div></div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-7"><div class="card-x">
+    <h5 class="card-title"><i class="bi bi-people"></i> Student-wise Attendance in this Subject</h5>
+    {% if by_student %}
+    <div class="table-responsive"><table class="table-x">
+      <thead><tr><th>Reg. No</th><th>Student</th><th>P / T</th><th>Attendance</th></tr></thead>
+      <tbody>{% for b in by_student %}
+        <tr><td>{{ b.reg_no }}</td><td><a href="{{ url_for('student_view', sid=b.id) }}">{{ b.name }}</a></td>
+            <td>{{ b.present }} / {{ b.total }}</td><td>{{ pct_bar(b.percent, b.status) }}</td></tr>
+      {% endfor %}</tbody></table></div>
+    {% else %}<div class="empty"><i class="bi bi-people"></i>No students registered yet.</div>{% endif %}
+  </div></div>
+  <div class="col-lg-5"><div class="card-x">
+    <h5 class="card-title"><i class="bi bi-calendar-week"></i> Recent Class Dates</h5>
+    {% if daily %}
+    <ul class="mini-list">{% for r in daily %}
+      <li><div><b>{{ r.key }}</b><small>{{ r.present }} present · {{ r.absent }} absent</small></div>
+        <span class="badge-s b-good">{{ '%.0f'|format(r.percent) }}%</span></li>
+    {% endfor %}</ul>
+    {% else %}<div class="empty"><i class="bi bi-calendar-x"></i>No class dates marked yet.</div>{% endif %}
+  </div></div>
+</div>
+{% endblock %}

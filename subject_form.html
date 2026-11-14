@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}{{ 'Edit Subject' if subject else 'Add Subject' }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="grow"><h2><i class="bi bi-journal-plus"></i> {{ 'Edit Subject' if subject else 'Add Subject' }}</h2><p>All fields are required.</p></div>
+  <a class="btn btn-hero-outline" href="{{ url_for('subjects') }}"><i class="bi bi-arrow-left"></i> Back to Subjects</a>
+</div>
+<div class="card-x">
+  <form method="post" novalidate>
+    {{ csrf() }}
+    <div class="row g-3">
+      <div class="col-md-6"><label class="form-label">Subject Code *</label>
+        <input class="form-control" name="code" maxlength="20" value="{{ form.code or '' }}" required placeholder="e.g. BCA501"></div>
+      <div class="col-md-6"><label class="form-label">Subject Name *</label>
+        <input class="form-control" name="name" maxlength="80" value="{{ form.name or '' }}" required placeholder="e.g. Python Programming"></div>
+      <div class="col-md-6"><label class="form-label">Semester *</label>
+        <input class="form-control" name="semester" maxlength="30" value="{{ form.semester or '' }}" required placeholder="e.g. 5th Sem"></div>
+      <div class="col-md-6"><label class="form-label">Subject Teacher *</label>
+        <input class="form-control" name="teacher" maxlength="80" value="{{ form.teacher or '' }}" required placeholder="Teacher name"></div>
+    </div>
+    <div class="mt-4 d-flex gap-2">
+      <button class="btn btn-primary px-4" type="submit"><i class="bi bi-check2-circle"></i> {{ 'Update Subject' if subject else 'Save Subject' }}</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('subjects') }}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

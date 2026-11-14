@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% from "_macros.html" import csrf %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="grow"><h2><i class="bi bi-gear-fill"></i> Settings</h2><p>Admin profile, login details and college information.</p></div>
+  <a class="btn btn-hero-outline" href="{{ url_for('logout') }}"><i class="bi bi-box-arrow-right"></i> Logout</a>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6"><div class="card-x">
+    <h5 class="card-title"><i class="bi bi-person-circle"></i> Admin Profile</h5>
+    <div class="d-flex align-items-center gap-3 mb-3">
+      <span class="avatar" style="width:56px;height:56px;font-size:22px">{{ admin.full_name[:1]|upper }}</span>
+      <div><b>{{ admin.full_name }}</b><br><span class="text-muted">Username: {{ admin.username }}</span></div>
+    </div>
+    <form method="post">{{ csrf() }}<input type="hidden" name="action" value="profile">
+      <label class="form-label">Full name</label>
+      <input class="form-control mb-3" name="full_name" maxlength="60" value="{{ admin.full_name }}" required>
+      <button class="btn btn-primary" type="submit"><i class="bi bi-check2"></i> Save Profile</button>
+    </form>
+  </div></div>
+
+  <div class="col-lg-6"><div class="card-x">
+    <h5 class="card-title"><i class="bi bi-person-gear"></i> Change Username</h5>
+    <form method="post">{{ csrf() }}<input type="hidden" name="action" value="username">
+      <label class="form-label">New username</label>
+      <input class="form-control mb-3" name="new_username" maxlength="30" required placeholder="letters, numbers, . or _">
+      <label class="form-label">Current password (to confirm)</label>
+      <input class="form-control mb-3" type="password" name="current_password" required autocomplete="current-password">
+      <button class="btn btn-primary" type="submit"><i class="bi bi-check2"></i> Change Username</button>
+    </form>
+  </div></div>
+
+  <div class="col-lg-6"><div class="card-x">
+    <h5 class="card-title"><i class="bi bi-shield-lock-fill"></i> Change Password</h5>
+    <form method="post">{{ csrf() }}<input type="hidden" name="action" value="password">
+      <label class="form-label">Current password</label>
+      <input class="form-control mb-3" type="password" name="current_password" required autocomplete="current-password">
+      <label class="form-label">New password (min 6 characters)</label>
+      <input class="form-control mb-3" type="password" name="new_password" minlength="6" required autocomplete="new-password">
+      <label class="form-label">Confirm new password</label>
+      <input class="form-control mb-3" type="password" name="confirm_password" minlength="6" required autocomplete="new-password">
+      <button class="btn btn-primary" type="submit"><i class="bi bi-check2"></i> Change Password</button>
+    </form>
+  </div></div>
+
+  <div class="col-lg-6"><div class="card-x">
+    <h5 class="card-title"><i class="bi bi-building"></i> College Information &amp; Academic Year</h5>
+    <form method="post">{{ csrf() }}<input type="hidden" name="action" value="college">
+      <div class="row g-3">
+        <div class="col-12"><label class="form-label">College name *</label>
+          <input class="form-control" name="college_name" maxlength="150" value="{{ college.college_name }}" required></div>
+        <div class="col-12"><label class="form-label">Department</label>
+          <input class="form-control" name="department" maxlength="150" value="{{ college.department }}"></div>
+        <div class="col-12"><label class="form-label">Address</label>
+          <input class="form-control" name="address" maxlength="150" value="{{ college.address }}"></div>
+        <div class="col-md-4"><label class="form-label">Academic year *</label>
+          <input class="form-control" name="academic_year" maxlength="20" value="{{ college.academic_year }}" required placeholder="2026-27"></div>
+        <div class="col-md-4"><label class="form-label">At-risk below (%)</label>
+          <input class="form-control" type="number" min="1" max="99" name="risk_threshold" value="{{ college.risk_threshold }}" required></div>
+        <div class="col-md-4"><label class="form-label">Excellent from (%)</label>
+          <input class="form-control" type="number" min="2" max="100" name="excellent_threshold" value="{{ college.excellent_threshold }}" required></div>
+      </div>
+      <button class="btn btn-primary mt-3" type="submit"><i class="bi bi-check2"></i> Save College Info</button>
+    </form>
+  </div></div>
+</div>
+{% endblock %}

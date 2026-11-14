@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% from "_macros.html" import status_badge %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div class="grow"><h2><i class="bi bi-file-earmark-bar-graph-fill"></i> Reports</h2><p>Generate, print and download attendance reports.</p></div>
+</div>
+
+<div class="anchor-nav no-print">
+  {% for key, label in report_types %}
+    <a href="{{ url_for('reports', type=key, **base_args) }}"
+       style="{{ 'background:#2563eb;color:#fff;border-color:#2563eb' if key == rtype }}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<div class="card-x mb-3 no-print">
+  <form class="row g-3 align-items-end" method="get" action="{{ url_for('reports') }}">
+    <input type="hidden" name="type" value="{{ rtype }}">
+    <div class="col-md-6 col-xl-3"><label class="form-label">Student</label>
+      <select class="form-select" name="student_id"><option value="">All students</option>
+        {% for s in students_list %}<option value="{{ s.id }}" {{ 'selected' if s.id == f.student_id }}>{{ s.name }} ({{ s.reg_no }})</option>{% endfor %}
+      </select></div>
+    <div class="col-md-6 col-xl-3"><label class="form-label">Subject</label>
+      <select class="form-select" name="subject_id"><option value="">All subjects</option>
+        {% for s in subjects_list %}<option value="{{ s.id }}" {{ 'selected' if s.id == f.subject_id }}>{{ s.code }} - {{ s.name }}</option>{% endfor %}
+      </select></div>
+    <div class="col-md-6 col-xl-2"><label class="form-label">From date</label>
+      <input class="form-control" type="date" name="date_from" value="{{ f.date_from }}"></div>
+    <div class="col-md-6 col-xl-2"><label class="form-label">To date</label>
+      <input class="form-control" type="date" name="date_to" value="{{ f.date_to }}"></div>
+    <div class="col-xl-2 d-flex gap-2">
+      <button class="btn btn-primary flex-fill" type="submit"><i class="bi bi-funnel"></i> Generate</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('reports', type=rtype) }}" title="Reset filters"><i class="bi bi-x-lg"></i></a>
+    </div>
+  </form>
+</div>
+
+<div class="card-x">
+  <div class="print-only mb-3">
+    <h3 class="mb-0">{{ college.college_name }}</h3>
+    <div>{{ college.department }} · Academic Year {{ college.academic_year }}</div><hr>
+  </div>
+  <div class="d-flex flex-wrap gap-2 justify-content-between align-items-start mb-3">
+    <div>
+      <h4 class="mb-1">{{ report.title }}</h4>
+      <div class="text-muted small">{{ report.filters_text }} · Generated {{ generated }}</div>
+      {% if report.note %}<div class="small text-primary mt-1"><i class="bi bi-info-circle"></i> {{ report.note }}</div>{% endif %}
+    </div>
+    <div class="d-flex gap-2 flex-wrap no-print">
+      <a class="btn btn-outline-success" href="{{ url_for('report_csv', **qargs) }}"><i class="bi bi-filetype-csv"></i> Export CSV</a>
+      <a class="btn btn-outline-danger" href="{{ url_for('report_pdf', **qargs) }}"><i class="bi bi-file-earmark-pdf"></i> Download PDF</a>
+      <button class="btn btn-outline-primary" type="button" data-print><i class="bi bi-printer"></i> Print Report</button>
+    </div>
+  </div>
+
+  {% if report.rows %}
+  <div class="table-responsive">
+    <table class="table-x">
+      <thead><tr>{% for c in report.columns %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+      <tbody>
+      {% for row in report.rows %}
+        <tr>{% for cell in row %}
+          <td>{% if report.columns[loop.index0] in ('Status',) %}{{ status_badge(cell) }}{% else %}{{ cell }}{% endif %}</td>
+        {% endfor %}</tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="text-muted small mt-2">{{ report.rows|length }} row{{ '' if report.rows|length == 1 else 's' }}</div>
+  {% else %}
+    <div class="empty"><i class="bi bi-file-earmark-x"></i>No attendance records match the selected filters.</div>
+  {% endif %}
+</div>
+{% endblock %}
